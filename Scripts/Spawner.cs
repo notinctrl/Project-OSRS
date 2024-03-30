@@ -1,18 +1,12 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
-    // Start is called before the first frame update
+    public GameObject prefabToInstantiate; // Reference to the prefab you want to instantiate
+
     void Start()
     {
-        
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
+        // Instantiate the prefab at a specific position and rotation
+        Instantiate(prefabToInstantiate, transform.position, Quaternion.identity);
     }
 }
