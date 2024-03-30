@@ -11,8 +11,6 @@ public class CombatTrigger : MonoBehaviour
     {
         if (other.CompareTag("Axe"))
         {
-            
-
             // Trigger the event to notify other scripts
             inCombat?.Invoke(true);
         }

@@ -13,13 +13,23 @@ public class WanderAi : MonoBehaviour
     private bool isRotatingRight = false;
     private bool isWalking = false;
 
-    // Update is called once per frame
+    private bool isScriptEnabled = true; // Flag to track if the script is enabled
+
     void Update()
     {
-        if (isWandering == false)
+        if (isScriptEnabled && !isWandering)
         {
             StartCoroutine(Wander());
         }
+        else
+        {
+            StopCoroutine(Wander());
+            isWandering = false;
+            isRotatingLeft = false;
+            isRotatingRight = false;
+            isWalking = false;
+        }
+
         if (isRotatingRight == true)
         {
             gameObject.GetComponent<Animator>().Play("Idle");
@@ -39,6 +49,7 @@ public class WanderAi : MonoBehaviour
 
     IEnumerator Wander() // This is the coroutine version of Wander
     {
+        Debug.Log("wandering");
         int rotTime = Random.Range(1, 3);
         int rotateWait = Random.Range(1, 4);
         int rotateLorR = Random.Range(1, 2);
@@ -65,5 +76,12 @@ public class WanderAi : MonoBehaviour
             isRotatingLeft = false;
         }
         isWandering = false;
+    }
+
+    // Method to enable or disable the script
+    public void SetScriptEnabled(bool enabled)
+    {
+        isScriptEnabled = enabled;
+        enabled = enabled; // This will enable or disable the script
     }
 }

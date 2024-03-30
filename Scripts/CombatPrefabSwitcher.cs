@@ -7,15 +7,17 @@ public class CombatPrefabSwitcher : MonoBehaviour
     public float attackDuration = 1.0f; // Duration of attack action in seconds
     public float blockDuration = 1.0f; // Duration of block action in seconds
     public float deathDuration = 1.0f;
+    public float idleDuration = 1.0f;
     public Transform povCamera;
     public int hitPoints = 3;
     // public GameObject deathSpawn;
 
     private Vector3 previousPosition;
     private bool isInCombat = false; // Flag to track if the NPC is in combat
-    private bool firstHit = true;
     private float actionTimer = 0.0f; // Timer for tracking action duration
     private int currentPrefabIndex = 0; // Index of the current active prefab
+    private bool blockActionInitiated = false; // Flag to track if the block action has been initiated
+    // private WanderAi wanderAiScript; // Reference to the WanderAi script
 
     void Start()
     {
@@ -37,42 +39,68 @@ public class CombatPrefabSwitcher : MonoBehaviour
 
         if (isInCombat)
         {
-            if (firstHit)
-            {
-                UnityEngine.AI.NavMeshAgent navMeshAgent = GetComponent<UnityEngine.AI.NavMeshAgent>();
-                if (navMeshAgent != null)
-                {
-                    navMeshAgent.enabled = false;
-                }
-                // Determine the position of the point of view camera
-                Vector3 cameraPosition = povCamera.position;
-                // Make the NPC look at the point of view camera
-                transform.LookAt(cameraPosition);
-                firstHit = false;
-            }
-            // Start with attack action
-            SwitchPrefab(2);
-            actionTimer = attackDuration;
+            // Unsubscribe from the event after the first invocation
+            GetComponent<CombatTrigger>().inCombat -= HandleEnterCombat;
+            Vector3 cameraPosition = povCamera.position;
+            transform.LookAt(cameraPosition);
         }
     }
 
-
-    private void HandleDeath()
+    void Update()
     {
-        isInCombat = false;
-        SwitchPrefab(4); // Play death animation
-        Invoke("DestroyNPC", deathDuration); // Delay destruction
-    }
-
-    private void DestroyNPC()
-    {
-        // Destroy all prefabs
-        for (int i = 0; i < prefabs.Length; i++)
+        // If in combat, decrement action timer
+        if (isInCombat)
         {
-            Destroy(prefabs[i]);
+            actionTimer -= Time.deltaTime;
+
+            if (actionTimer <= 0.0f && currentPrefabIndex != 0)
+            {
+                SwitchPrefab(0); // Switch to idle prefab
+                blockActionInitiated = false; // Reset the block action flag
+            }
+            else if (actionTimer <= 0.0f)
+            {
+                SwitchPrefab(2);
+                actionTimer = attackDuration;
+            }
         }
-        // Destroy the parent game object
-        Destroy(gameObject);
+        else
+        {
+            // Check if the position of the parent GameObject has changed
+            if (transform.position != previousPosition)
+            {
+                // Parent GameObject is moving
+                if (currentPrefabIndex != 1){
+                    SwitchPrefab(1);
+                }
+            }
+            else
+            {
+                // Parent GameObject is not moving
+                SwitchPrefab(0);
+            }
+
+            // Update previousPosition for the next frame
+            previousPosition = transform.position;
+        }
+    }
+
+    // Method to switch to a specific prefab
+    private void SwitchPrefab(int prefabIndex)
+    {
+        prefabs[currentPrefabIndex].SetActive(false);
+        prefabs[prefabIndex].SetActive(true);
+        currentPrefabIndex = prefabIndex;
+    }
+
+    // OnTriggerEnter is called when another collider enters the trigger area
+    private void OnTriggerEnter(Collider other)
+    {
+        // Check if the entering object is an axe
+        if (other.CompareTag("Axe"))
+        {
+            HandleBlockTrigger(other);
+        }
     }
 
     private void HandleBlockTrigger(Collider other)
@@ -85,67 +113,41 @@ public class CombatPrefabSwitcher : MonoBehaviour
 
             if (hitPoints <= 0)
             {
+                StopAllCoroutines();
                 // Play death animation and schedule destruction
                 HandleDeath();
             }
         }
     }
 
-
-    // Method to switch to a specific prefab
-    private void SwitchPrefab(int prefabIndex)
+    
+    private void HandleDeath()
     {
-        // Deactivate the current prefab
-        prefabs[currentPrefabIndex].SetActive(false);
-
-        // Activate the new prefab
-        prefabs[prefabIndex].SetActive(true);
-
-        // Update the current prefab index
-        currentPrefabIndex = prefabIndex;
+        // isInCombat = false;
+        SwitchPrefab(4); // Play death animation
+        StartCoroutine(DestroyAfterAnimation(deathDuration)); // Delay destruction
     }
 
-    void Update()
+    private IEnumerator DestroyAfterAnimation(float delay)
     {
-        // If in combat, decrement action timer
-        if (isInCombat)
-        {
-            actionTimer -= Time.deltaTime;
+        // yield return new WaitForSeconds(delay);
+        float elapsedTime = 0.0f;
 
-            // If action timer reaches zero, switch to idle prefab
-            if (actionTimer <= 0.0f)
-            {
-                SwitchPrefab(0); // Switch to idle prefab
-            }
-        }
-        else
-        {
-            // Check if the position of the parent GameObject has changed
-            if (transform.position != previousPosition)
-            {
-                // Parent GameObject is moving
-                prefabs[0].SetActive(false);
-                prefabs[1].SetActive(true);
-            }
-            else
-            {
-                // Parent GameObject is not moving
-                prefabs[1].SetActive(false);
-                prefabs[0].SetActive(true);
-            }
-
-            // Update previousPosition for the next frame
-            previousPosition = transform.position;
-        }
+    while (elapsedTime < delay)
+    {
+        Debug.Log("Time remaining: " + (delay - elapsedTime) + " seconds");
+        yield return new WaitForSeconds(1.0f); // Wait for 1 second
+        elapsedTime += 1.0f; // Increment elapsed time by 1 second
     }
 
-    // OnTriggerEnter is called when another collider enters the trigger area
-    private void OnTriggerEnter(Collider other)
-    {
-        // Check if the entering object is an axe
-        if (other.CompareTag("Axe"))
+    Debug.Log("Animation finished after " + delay + " seconds");
+
+        // Destroy all prefabs
+        for (int i = 0; i < prefabs.Length; i++)
         {
-            HandleBlockTrigger(other);
+            Destroy(prefabs[i]);
         }
+        // Destroy the parent game object
+        Destroy(gameObject);
     }
 }
