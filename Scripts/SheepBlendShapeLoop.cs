@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class BlendShapeLoop2 : MonoBehaviour
+public class SheepBlendShapeLoop : MonoBehaviour
 {
     int blendShapeCount;
     SkinnedMeshRenderer skinnedMeshRenderer;
