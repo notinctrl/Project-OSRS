@@ -16,18 +16,19 @@ public class CombatPrefabSwitcher : MonoBehaviour
     private bool isInCombat = false; // Flag to track if the NPC is in combat
     private float actionTimer = 0.0f; // Timer for tracking action duration
     private int currentPrefabIndex = 0; // Index of the current active prefab
-    private bool blockActionInitiated = false; // Flag to track if the block action has been initiated
-    // private WanderAi wanderAiScript; // Reference to the WanderAi script
+    private WanderAi wanderAiScript; // Reference to the WanderAi script
 
     void Start()
     {
         // Initialize previousPosition with the initial position of the parent GameObject
         previousPosition = transform.position;
         // Disable all prefabs except the first one (idle)
+        prefabs[0].SetActive(true);
         for (int i = 1; i < prefabs.Length; i++)
         {
             prefabs[i].SetActive(false);
         }
+        wanderAiScript = GetComponent<WanderAi>();
         // Subscribe to the OnEnterCombat event
         GetComponent<CombatTrigger>().inCombat += HandleEnterCombat;
     }
@@ -39,9 +40,12 @@ public class CombatPrefabSwitcher : MonoBehaviour
 
         if (isInCombat)
         {
+            wanderAiScript.EnterCombat();
             // Unsubscribe from the event after the first invocation
             GetComponent<CombatTrigger>().inCombat -= HandleEnterCombat;
             Vector3 cameraPosition = povCamera.position;
+            actionTimer = blockDuration;
+            SwitchPrefab(3);
             transform.LookAt(cameraPosition);
         }
     }
@@ -49,17 +53,20 @@ public class CombatPrefabSwitcher : MonoBehaviour
     void Update()
     {
         // If in combat, decrement action timer
-        if (isInCombat)
+        if (isInCombat && hitPoints > 0)
         {
             actionTimer -= Time.deltaTime;
 
-            if (actionTimer <= 0.0f && currentPrefabIndex != 0)
+            if (actionTimer <= 0.0f && currentPrefabIndex != 0 && hitPoints > 0)
             {
+                // Debug.Log("back to idle after atk/block");
+                gameObject.GetComponent<Animator>().Play("Idle");
                 SwitchPrefab(0); // Switch to idle prefab
-                blockActionInitiated = false; // Reset the block action flag
+                actionTimer = idleDuration;
             }
-            else if (actionTimer <= 0.0f)
+            else if (actionTimer <= 0.0f && hitPoints > 0)
             {
+                // Debug.Log("atacking");
                 SwitchPrefab(2);
                 actionTimer = attackDuration;
             }
@@ -67,15 +74,18 @@ public class CombatPrefabSwitcher : MonoBehaviour
         else
         {
             // Check if the position of the parent GameObject has changed
-            if (transform.position != previousPosition)
+            // transform.position != previousPosition
+            // wanderAiScript != null && wanderAiScript.isWandering
+            if (transform.position != previousPosition && hitPoints > 0)
             {
                 // Parent GameObject is moving
-                if (currentPrefabIndex != 1){
-                    SwitchPrefab(1);
-                }
+                // Debug.Log("Walkinf");
+                SwitchPrefab(1);
             }
-            else
+            // wanderAiScript != null && !wanderAiScript.isWandering && 
+            else if (hitPoints > 0)
             {
+                // Debug.Log("stationary after move");
                 // Parent GameObject is not moving
                 SwitchPrefab(0);
             }
@@ -107,13 +117,19 @@ public class CombatPrefabSwitcher : MonoBehaviour
     {
         if (other.CompareTag("Axe"))
         {
+            // Debug.Log("blocking subseq hits");
             SwitchPrefab(3);
             actionTimer = blockDuration;
             hitPoints--;
 
             if (hitPoints <= 0)
             {
-                StopAllCoroutines();
+                // Debug.Log("dieded");
+                for (int i = 0; i < prefabs.Length - 1; i++)
+                {
+                    // Debug.Log("prefab " + i + " disabled");
+                    prefabs[i].SetActive(false);
+                }
                 // Play death animation and schedule destruction
                 HandleDeath();
             }
@@ -123,7 +139,8 @@ public class CombatPrefabSwitcher : MonoBehaviour
     
     private void HandleDeath()
     {
-        // isInCombat = false;
+        // Debug.Log("playing death anima");
+        isInCombat = false;
         SwitchPrefab(4); // Play death animation
         StartCoroutine(DestroyAfterAnimation(deathDuration)); // Delay destruction
     }
@@ -135,12 +152,12 @@ public class CombatPrefabSwitcher : MonoBehaviour
 
     while (elapsedTime < delay)
     {
-        Debug.Log("Time remaining: " + (delay - elapsedTime) + " seconds");
+        // Debug.Log("Time remaining until destroyed: " + (delay - elapsedTime) + " seconds");
         yield return new WaitForSeconds(1.0f); // Wait for 1 second
         elapsedTime += 1.0f; // Increment elapsed time by 1 second
     }
 
-    Debug.Log("Animation finished after " + delay + " seconds");
+    // Debug.Log("Animation supposedly finished after " + delay + " seconds");
 
         // Destroy all prefabs
         for (int i = 0; i < prefabs.Length; i++)
