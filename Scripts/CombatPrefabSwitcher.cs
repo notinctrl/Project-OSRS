@@ -169,12 +169,16 @@ public class CombatPrefabSwitcher : MonoBehaviour
 
     // Debug.Log("Animation supposedly finished after " + delay + " seconds");
 
-        // Destroy all prefabs
         for (int i = 0; i < prefabs.Length; i++)
         {
             Destroy(prefabs[i]);
         }
-        // Destroy the parent game object
+
+        // Instantiate deathSpawn with a slightly higher Y coordinate
+        Vector3 deathSpawnPosition = transform.position;
+        deathSpawnPosition.y += 6.0f; // Adjust the Y coordinate as needed
+        Instantiate(deathSpawn, deathSpawnPosition, Quaternion.identity);
+
         Destroy(gameObject);
     }
 }
