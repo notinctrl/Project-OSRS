@@ -114,7 +114,7 @@ public class CombatPrefabSwitcher : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // Check if the entering object is an axe
-        if (other.CompareTag("Axe"))
+        if (other.CompareTag("Iron Dagger") || other.CompareTag("Rune Scim") || other.CompareTag("Fang"))
         {
             HandleBlockTrigger(other);
         }
