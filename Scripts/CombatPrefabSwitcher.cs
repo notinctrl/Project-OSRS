@@ -10,7 +10,10 @@ public class CombatPrefabSwitcher : MonoBehaviour
     public float idleDuration = 1.0f;
     public Transform povCamera;
     public int hitPoints = 3;
-    // public GameObject deathSpawn;
+    public AudioClip[] ouchSounds;
+    public AudioClip[] hitSounds;
+    public AudioClip deathSound;
+    public GameObject deathSpawn;
 
     private Vector3 previousPosition;
     private bool isInCombat = false; // Flag to track if the NPC is in combat
@@ -46,6 +49,8 @@ public class CombatPrefabSwitcher : MonoBehaviour
             Vector3 cameraPosition = povCamera.position;
             actionTimer = blockDuration;
             SwitchPrefab(3);
+            int randomIndex = Random.Range(0, hitSounds.Length);
+            AudioManager.instance.PlayHitSound(hitSounds[randomIndex]);
             transform.LookAt(cameraPosition);
         }
     }
@@ -68,6 +73,8 @@ public class CombatPrefabSwitcher : MonoBehaviour
             {
                 // Debug.Log("atacking");
                 SwitchPrefab(2);
+                int randomIndex = Random.Range(0, ouchSounds.Length);
+                AudioManager.instance.PlayOuchSound(ouchSounds[randomIndex]);
                 actionTimer = attackDuration;
             }
         }
@@ -119,6 +126,8 @@ public class CombatPrefabSwitcher : MonoBehaviour
         {
             // Debug.Log("blocking subseq hits");
             SwitchPrefab(3);
+            int randomIndex = Random.Range(0, hitSounds.Length);
+            AudioManager.instance.PlayHitSound(hitSounds[randomIndex]);
             actionTimer = blockDuration;
             hitPoints--;
 
@@ -142,6 +151,7 @@ public class CombatPrefabSwitcher : MonoBehaviour
         // Debug.Log("playing death anima");
         isInCombat = false;
         SwitchPrefab(4); // Play death animation
+        AudioManager.instance.PlayDeathSound(deathSound);
         StartCoroutine(DestroyAfterAnimation(deathDuration)); // Delay destruction
     }
 
