@@ -9,7 +9,7 @@ public class CombatTrigger : MonoBehaviour
     // Start is called before the first frame update
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Axe"))
+        if (other.CompareTag("Iron Dagger") || other.CompareTag("Rune Scim") || other.CompareTag("Fang"))
         {
             // Trigger the event to notify other scripts
             inCombat?.Invoke(true);

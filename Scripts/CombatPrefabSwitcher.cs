@@ -122,14 +122,26 @@ public class CombatPrefabSwitcher : MonoBehaviour
 
     private void HandleBlockTrigger(Collider other)
     {
-        if (other.CompareTag("Axe"))
+        if (other.CompareTag("Iron Dagger") || other.CompareTag("Rune Scim") || other.CompareTag("Fang"))
         {
             // Debug.Log("blocking subseq hits");
             SwitchPrefab(3);
             int randomIndex = Random.Range(0, hitSounds.Length);
             AudioManager.instance.PlayHitSound(hitSounds[randomIndex]);
             actionTimer = blockDuration;
-            hitPoints--;
+            if (other.CompareTag("Iron Dagger"))
+            {
+                hitPoints--;
+            }
+            else if (other.CompareTag("Rune Scim"))
+            {
+                hitPoints -= 3;
+            }
+            else if (other.CompareTag("Fang"))
+            {
+                hitPoints -= 6;
+            }
+            
 
             if (hitPoints <= 0)
             {

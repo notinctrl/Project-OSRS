@@ -6,13 +6,15 @@ public class AudioManager : MonoBehaviour
 {
     // [SerializeField]
     public AudioClip defaultAmbience;
-    public AudioClip destructionSound; // Destruction sound clip
+    public AudioClip destructionSound;
+    public AudioClip unlockSound;
 
     private AudioSource track1, track2;
     private AudioSource destructionSoundSource;
     private AudioSource ouchSoundSource;
     private AudioSource hitSoundSource;
     private AudioSource deathSoundSource;
+    private AudioSource unlockSoundSource;
     private bool isPlayingTrack1;
     private bool firstTime = true;
 
@@ -32,6 +34,7 @@ public class AudioManager : MonoBehaviour
         hitSoundSource = gameObject.AddComponent<AudioSource>();
         ouchSoundSource = gameObject.AddComponent<AudioSource>();
         deathSoundSource = gameObject.AddComponent<AudioSource>();
+        unlockSoundSource = gameObject.AddComponent<AudioSource>();
         isPlayingTrack1 = true;
 
         SwapTrack(defaultAmbience);
@@ -69,6 +72,11 @@ public class AudioManager : MonoBehaviour
     public void PlayDeathSound(AudioClip deathSound)
     {
         deathSoundSource.PlayOneShot(deathSound);
+    }
+
+    public void PlayUnlockSound()
+    {
+        unlockSoundSource.PlayOneShot(unlockSound);
     }
 
     private IEnumerator FadeTrack(AudioClip newClip)
