@@ -11,7 +11,7 @@ public class Portals : MonoBehaviour
     private void OnTriggerEnter(Collider other)
     {
         // Check if the collider belongs to the player
-        if (other.CompareTag("Player"))
+        if (other.CompareTag("MainCamera"))
         {
             Player = other.gameObject;
             TeleportPlayer(Player);
